@@ -35,7 +35,7 @@ def get_menu(call,lang):
         orderkiwi     = types.KeyboardButton("Обмен QIWI")
         cashback      = types.KeyboardButton("Cashback")
         mycards       = types.KeyboardButton("🔰Мои счета")
-        kurs          = types.KeyboardButton("Курс | Резервы")
+        kurs          = types.KeyboardButton("📈Курс | 💰Резервы")
         myreplenish   = types.KeyboardButton("Мои пополнения")
         callback      = types.KeyboardButton("Обратная связь")
         markup.row(replenish)        
@@ -51,7 +51,7 @@ def get_menu(call,lang):
         orderkiwi     = types.KeyboardButton("QIWI ayrboshlash")
         cashback      = types.KeyboardButton("Cashback")
         mycards       = types.KeyboardButton("🔰Hamyonlar")
-        kurs          = types.KeyboardButton("Kurs | Zahira")
+        kurs          = types.KeyboardButton("📈Kurs | 💰Zahira")
         myreplenish   = types.KeyboardButton("Tulovlar tarixi")
         callback      = types.KeyboardButton("Aloqa")
         markup.row(replenish)
@@ -116,7 +116,36 @@ def get_userinfo(message,lang):
         markup.add(user_card,user_ruxbet,user_uzxbet,user_ruline,user_uzline,user_rumelbet,user_uzmelbet)
         bot.send_message(message.chat.id,"🗂Sizning hisoblaringiz:", reply_markup = markup)
     
-     
+def get_kursinfo(message,lang):
+    mydb = connector.connect(
+    host="localhost",
+    user="root",
+    password="root",
+    database="linebet"
+    )
+    mycursor = mydb.cursor()    
+    mycursor.execute("SELECT * FROM kurs ")
+    myresult = mycursor.fetchall()
+    for item in myresult:
+        if (lang == 'ru'):
+            if (int(item[11]) == 0):
+                bot.send_message(message.chat.id,"📉Курс пополнения")
+                msg = "1XBET UZS = "+item[1]+"\n1XBET USD = "+item[3]+"\n1XBET RUB ="+item[2]+"\nLINEBET UZS ="+item[4]+"\nLINEBET RUB = "+item[5]+"\nLINEBET USD = "+item[6]+"\nMELBET UZS ="+item[7]+"\nMELBET RUB ="+item[8]+"\nMELBET USD ="+item[9]+"\nQIWI = "+item[10]
+                bot.send_message(message.chat.id,msg)
+            else:
+                bot.send_message(message.chat.id,"📉Курс вывода")
+                msg = "1XBET UZS = "+item[1]+"\n1XBET USD = "+item[3]+"\n1XBET RUB ="+item[2]+"\nLINEBET UZS ="+item[4]+"\nLINEBET RUB = "+item[5]+"\nLINEBET USD = "+item[6]+"\nMELBET UZS ="+item[7]+"\nMELBET RUB ="+item[8]+"\nMELBET USD ="+item[9]+"\nQIWI = "+item[10]    
+                bot.send_message(message.chat.id,msg)
+            
+        if (lang == 'uz'):
+            if (int(item[11]) == 0):
+                bot.send_message(message.chat.id,"📉Toldirish kursi")
+                msg = "1XBET UZS = "+item[1]+"\n1XBET USD = "+item[3]+"\n1XBET RUB ="+item[2]+"\nLINEBET UZS ="+item[4]+"\nLINEBET RUB = "+item[5]+"\nLINEBET USD = "+item[6]+"\nMELBET UZS ="+item[7]+"\nMELBET RUB ="+item[8]+"\nMELBET USD ="+item[9]+"\nQIWI = "+item[10]
+                bot.send_message(message.chat.id,msg)
+            else:
+                bot.send_message(message.chat.id,"📉Chiqarish kursi")
+                msg = "1XBET UZS = "+item[1]+"\n1XBET USD = "+item[3]+"\n1XBET RUB ="+item[2]+"\nLINEBET UZS ="+item[4]+"\nLINEBET RUB = "+item[5]+"\nLINEBET USD = "+item[6]+"\nMELBET UZS ="+item[7]+"\nMELBET RUB ="+item[8]+"\nMELBET USD ="+item[9]+"\nQIWI = "+item[10]
+                bot.send_message(message.chat.id,msg)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -155,6 +184,8 @@ def get_text(message):
         get_instruction(message,lang)
     if (message.text == "🔰Hamyonlar") or (message.text == "🔰Мои счета"):
         get_userinfo(message,lang)
+    if (message.text == "📈Kurs | 💰Zahira") or (message.text == "📈Курс | 💰Резервы"):
+        get_kursinfo(message,lang)
    
     
 
