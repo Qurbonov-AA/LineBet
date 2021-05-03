@@ -10,7 +10,7 @@ lang = ''
 mydb = connector.connect(
     host="localhost",
     user="root",
-    password="",
+    password="root",
     database="linebet"
 )
 
@@ -43,9 +43,8 @@ def get_menu(call, lang):
         markup.row(orderkiwi, cashback)
         markup.row(mycards, kurs)
         markup.row(myreplenish, callback)
-        bot.send_message(call.message.chat.id,
-                         "Главное меню", reply_markup=markup)
-    if(lang == 'uz'):
+        bot.send_message(call.from_user.id,"Главное меню", reply_markup=markup)
+    elif(lang == 'uz'):
         replenish = types.KeyboardButton("🔄Hisobni toldirish")
         withdraw = types.KeyboardButton("chiqarish")
         instruction = types.KeyboardButton("📚Qo'llanma")
@@ -60,8 +59,7 @@ def get_menu(call, lang):
         markup.row(orderkiwi, cashback)
         markup.row(mycards, kurs)
         markup.row(myreplenish, callback)
-        bot.send_message(call.message.chat.id,
-                         "Bosh menu", reply_markup=markup)
+        bot.send_message(call.from_user.id,"Bosh menu", reply_markup=markup)
 
 # replenish
 
@@ -69,11 +67,11 @@ def get_menu(call, lang):
 def get_replenish(message, lang):
     markup = types.InlineKeyboardMarkup(row_width=2)
     xbet_uz = types.InlineKeyboardButton(
-        "1XBET UZS", callback_data='replenish_uzs')
+        "1XBET UZS", callback_data='replenish_1xbet')
     xbet_ru = types.InlineKeyboardButton(
-        "1XBET RUB", callback_data='replenish_rub')
+        "MelBet UZS", callback_data='replenish_melbet')
     linebet_uz = types.InlineKeyboardButton(
-        "LineBet UZS", callback_data='linebet_uzs')
+        "LineBet UZS", callback_data='replanish_linebet')
     markup.add(xbet_uz, xbet_ru, linebet_uz)
     if (lang == 'ru'):
         bot.send_message(
@@ -112,39 +110,25 @@ def get_userinfo(message, lang):
     if (lang == 'ru'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
-        user_ruxbet = types.InlineKeyboardButton(
-            "➕1XBET RUB", callback_data='user_1xrub')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
-        user_ruline = types.InlineKeyboardButton(
-            "➕LINEBET RUB", callback_data='user_linerub')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
-        user_rumelbet = types.InlineKeyboardButton(
-            "➕MELBET RUB", callback_data='user_melbetrub')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        markup.add(user_card, user_ruxbet, user_uzxbet, user_ruline,
-                   user_uzline, user_rumelbet, user_uzmelbet)
+        markup.add(user_card, user_uzxbet, user_uzline, user_uzmelbet)
         bot.send_message(message.chat.id, "🗂Ваши Кошельки:",
                          reply_markup=markup)
     if (lang == 'uz'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
-        user_ruxbet = types.InlineKeyboardButton(
-            "➕1XBET RUB", callback_data='user_1xrub')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
-        user_ruline = types.InlineKeyboardButton(
-            "➕LINEBET RUB", callback_data='user_linerub')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
-        user_rumelbet = types.InlineKeyboardButton(
-            "➕MELBET RUB", callback_data='user_melbetrub')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        markup.add(user_card, user_ruxbet, user_uzxbet, user_ruline,
-                   user_uzline, user_rumelbet, user_uzmelbet)
+        markup.add(user_card, user_uzxbet, user_uzline, user_uzmelbet)
         bot.send_message(
             message.chat.id, "🗂Sizning hisoblaringiz:", reply_markup=markup)
 
@@ -193,13 +177,16 @@ def get_frontend(message):
     # print(message)
     if(message.content_type == 'photo'):
         user = message.from_user.id
-        photo_data = message.json["photo"][0]["file_id"]
-
+        photo_data = message.json["photo"][-1]["file_id"]
+        file_info = bot.get_file(photo_data)
+        downloaded_file = bot.download_file(file_info.file_path)
         sql = "INSERT INTO imgs (file_id,user_id,status) VALUES (%s,%s,%s)"
         val = (photo_data, user, 'front')
         mycursor = mydb.cursor()
         mycursor.execute(sql, val)
         mydb.commit()
+        with open("img/f"+str(message.chat.id)+".jpg", 'wb') as new_file:
+            new_file.write(downloaded_file)
         if(lang == 'uz'):
             bot.send_message(
                 message.chat.id, "passportni propiska tarafini junating")
@@ -215,17 +202,30 @@ def get_backend(message):
     if(message.content_type == 'photo'):
         user = message.from_user.id
         photo_data = message.json["photo"][0]["file_id"]
-
+        file_info = bot.get_file(photo_data)
+        downloaded_file = bot.download_file(file_info.file_path)
         sql = "INSERT INTO imgs (file_id,user_id,status) VALUES (%s,%s,%s)"
-        val = (photo_data, user, 'front')
+        val = (photo_data, user, 'backend')
         mycursor = mydb.cursor()
         mycursor.execute(sql, val)
         mydb.commit()
+        with open("img/b"+str(message.chat.id)+".jpg", 'wb') as new_file:
+            new_file.write(downloaded_file)
         if(lang == 'uz'):
             bot.send_message(
                 message.chat.id, "Sizni surovingiz qabul qilindi!")
         else:
             bot.send_message(message.chat.id, "Ваша заявка принято!")
+
+
+def user_id_upd(call):
+    global mydb
+    global lang
+    #mycursor = mydb.cursor()
+    #sql = "UPDATE users SET address = 'Canyon 123' WHERE address = 'Valley 345'"
+    #mycursor.execute(sql)
+    #mydb.commit()
+    print(call)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -235,8 +235,7 @@ def send_welcome(message):
     uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
     markup.add(ru, uz)
     bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
-    bot.send_message(
-        message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
+    bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
     user_add(message.from_user.id, mydb)
 
 
@@ -246,11 +245,25 @@ def callback_inline(call):
     if call.data == 'ru':
         lang = 'ru'
         get_menu(call, lang)
-
-    if call.data == 'uz':
+    elif call.data == 'uz':
         lang = 'uz'
         get_menu(call, lang)
-
+    elif call.data  == 'replenish_1xbet':
+        if (lang == 'uz'):
+            bot.send_message(call.from_user.id,"1XBET dagi id nomeringizni kiriting! ")            
+        else:
+            bot.send_message(call.from_user.id,"Напишите ид из 1XBET а!")            
+    elif call.data == 'replenish_melbet':
+        if (lang == 'uz'):
+            bot.send_message(call.from_user.id,"MELBET dagi id nomeringizni kiriting! ")            
+        else:
+            bot.send_message(call.from_user.id,"Напишите ид из MELBET а!")             
+    elif call.data == 'replanish_linebet':
+        if (lang == 'uz'):
+            bot.send_message(call.from_user.id,"LINEBET dagi id nomeringizni kiriting! ")            
+        else:
+            bot.send_message(call.from_user.id,"Напишите ид из LINEBET а!")
+    user_id_upd(call) 
 
 @bot.message_handler(content_types=['text'])
 def get_text(message):
