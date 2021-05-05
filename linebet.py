@@ -4,7 +4,7 @@ from mysql import connector
 bot = telebot.TeleBot(
     "1778835566:AAGCqelAKbl7DBltGvpOT8pv-4_6lZezS9o", parse_mode="html")
 
-lang = ''
+lang = 'uz'
 # main menu
 
 mydb = connector.connect(
@@ -65,18 +65,24 @@ def get_menu(call, lang):
 
 
 def get_replenish(message, lang):
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    xbet_uz = types.InlineKeyboardButton(
-        "1XBET UZS", callback_data='replenish_1xbet')
-    xbet_ru = types.InlineKeyboardButton(
-        "MelBet UZS", callback_data='replenish_melbet')
-    linebet_uz = types.InlineKeyboardButton(
-        "LineBet UZS", callback_data='replanish_linebet')
-    markup.add(xbet_uz, xbet_ru, linebet_uz)
+    markup = types.ReplyKeyboardMarkup()
+    xbet_uz = types.KeyboardButton(
+        "1XBET UZS")
+    xbet_ru = types.KeyboardButton(
+        "MelBet UZS")
+    linebet_uz = types.KeyboardButton(
+        "LineBet UZS")    
+    
     if (lang == 'ru'):
+        main       = types.KeyboardButton("Главная меню")
+        markup.row(xbet_uz, xbet_ru, linebet_uz)
+        markup.row(main)
         bot.send_message(
             message.chat.id, "Выберите валюту пополнения.", reply_markup=markup)
     if (lang == 'uz'):
+        main       = types.KeyboardButton("Asosiy menu")
+        markup.row(xbet_uz, xbet_ru, linebet_uz)
+        markup.row(main)
         bot.send_message(
             message.chat.id, "To'ldirilayotgan valyuta turini tanlang.", reply_markup=markup)
 
@@ -218,15 +224,19 @@ def get_backend(message):
             bot.send_message(message.chat.id, "Ваша заявка принято!")
 
 
-def user_id_upd(call):
+def user_id_upd(message):
     global mydb
     global lang
-    #mycursor = mydb.cursor()
-    #sql = "UPDATE users SET address = 'Canyon 123' WHERE address = 'Valley 345'"
-    #mycursor.execute(sql)
-    #mydb.commit()
-    print(call)
-
+    mycursor = mydb.cursor()
+    sql = f"SELECT  * FROM  users WHERE chat_id = {message.from_user.id}"
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    for item in myresult:
+        if (item[2] > 0) or (item[3] > 0 ) or (item[5] > 0) or (item[7] > 0):
+            bot.send_message(message.chat.id,f"sizning UZCARD karta raqamingiz! {item[2]} , \n LineBet id ingiz {item[3]}, \n 1xBet da id  {item[5]}, \n MelBet  idingiz {item[7]} ingiz")
+        else:
+            bot.send_message(message.chat.id, "Siz hal malumotlaringizni kiritmagansiz!")
+            print(message)
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -248,22 +258,7 @@ def callback_inline(call):
     elif call.data == 'uz':
         lang = 'uz'
         get_menu(call, lang)
-    elif call.data  == 'replenish_1xbet':
-        if (lang == 'uz'):
-            bot.send_message(call.from_user.id,"1XBET dagi id nomeringizni kiriting! ")            
-        else:
-            bot.send_message(call.from_user.id,"Напишите ид из 1XBET а!")            
-    elif call.data == 'replenish_melbet':
-        if (lang == 'uz'):
-            bot.send_message(call.from_user.id,"MELBET dagi id nomeringizni kiriting! ")            
-        else:
-            bot.send_message(call.from_user.id,"Напишите ид из MELBET а!")             
-    elif call.data == 'replanish_linebet':
-        if (lang == 'uz'):
-            bot.send_message(call.from_user.id,"LINEBET dagi id nomeringizni kiriting! ")            
-        else:
-            bot.send_message(call.from_user.id,"Напишите ид из LINEBET а!")
-    user_id_upd(call) 
+     
 
 @bot.message_handler(content_types=['text'])
 def get_text(message):
@@ -284,6 +279,12 @@ def get_text(message):
                 message.chat.id, "Passport ma'lumotlaringizni rasm kurinishida junating!")
 
         bot.register_next_step_handler(message, get_frontend)
+    if (message.text == "1XBET UZS") or (message.text == "MelBet UZS") or (message.text == "LineBet UZS"):
+        if (lang == "uz"):
+            bot.send_message(message.chat.id,"1XBET, MELBET, LineBet dagi id nomeringizni kiriting! ")            
+        else:
+            bot.send_message(message.chat.id,"Напишите ид из 1XBET, MELBET, LineBet а!")
+        bot.register_next_step_handler(message,user_id_upd)
 
 
 bot.polling()
