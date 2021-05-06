@@ -1,10 +1,12 @@
 import telebot
 from telebot import types
 from mysql import connector
+import json
 bot = telebot.TeleBot(
     "1778835566:AAGCqelAKbl7DBltGvpOT8pv-4_6lZezS9o", parse_mode="html")
 
-lang = ''
+lang = 'uz'
+messages = ''
 # main menu
 
 mydb = connector.connect(
@@ -74,11 +76,9 @@ def get_replenish(message, lang):
         "LineBet UZS", callback_data='replanish_linebet')
     markup.add(xbet_uz, xbet_ru, linebet_uz)
     if (lang == 'ru'):
-        bot.send_message(
-            message.chat.id, "Выберите валюту пополнения.", reply_markup=markup)
+        bot.send_message(message.chat.id, "Выберите валюту пополнения.", reply_markup=markup)
     if (lang == 'uz'):
-        bot.send_message(
-            message.chat.id, "To'ldirilayotgan valyuta turini tanlang.", reply_markup=markup)
+        bot.send_message(message.chat.id, "To'ldirilayotgan valyuta turini tanlang.", reply_markup=markup)
 
 
 def get_instruction(message, lang):
@@ -117,8 +117,7 @@ def get_userinfo(message, lang):
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
         markup.add(user_card, user_uzxbet, user_uzline, user_uzmelbet)
-        bot.send_message(message.chat.id, "🗂Ваши Кошельки:",
-                         reply_markup=markup)
+        bot.send_message(message.chat.id, "🗂Ваши Кошельки:",   reply_markup=markup)
     if (lang == 'uz'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
@@ -218,14 +217,37 @@ def get_backend(message):
             bot.send_message(message.chat.id, "Ваша заявка принято!")
 
 
-def user_id_upd(call):
+
+
+
+def user_id_upd(user_id,state,call):
     global mydb
     global lang
-    #mycursor = mydb.cursor()
-    #sql = "UPDATE users SET address = 'Canyon 123' WHERE address = 'Valley 345'"
-    #mycursor.execute(sql)
-    #mydb.commit()
-    print(call)
+    mycursor = mydb.cursor()
+    mycursor.execute(f"SELECT  * from users WHERE chat_id = '{user_id}'")
+    myresult = mycursor.fetchall()
+    if (lang == "uz"):
+        for item in myresult:
+            if(state == "user_uzcard"):
+                mycard = item[2]
+                if (mycard > 0):
+                    bot.send_message(user_id,f"Sizning carta raqamingiz! - {mycard}")
+                else:
+                    bot.send_message(user_id,f"Sizning carta raqamingiz bazaga kiritilmagan. Iltimos kiriting!")
+                    bot.register_next_step_handler(call, add_mycard)
+                    
+            elif (state == "user_1xuzb"):
+                mycard = item[5]
+            elif (state == "user_lineuzb"):
+                mycard = item[3]
+            elif (state == "user_melbetuzb"):
+                mycard = item[7]
+    
+
+def add_mycard(messages):
+    print(message)
+        
+    
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -237,6 +259,8 @@ def send_welcome(message):
     bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
     bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
     user_add(message.from_user.id, mydb)
+
+
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -263,7 +287,11 @@ def callback_inline(call):
             bot.send_message(call.from_user.id,"LINEBET dagi id nomeringizni kiriting! ")            
         else:
             bot.send_message(call.from_user.id,"Напишите ид из LINEBET а!")
-    user_id_upd(call) 
+    elif (call.data == "user_uzcard") or (call.data == "user_1xuzb") or (call.data == "user_lineuzb") or (call.data == "user_melbetuzb"):
+        user_id_upd(call.from_user.id,"user_uzcard",call)
+   
+            
+            
 
 @bot.message_handler(content_types=['text'])
 def get_text(message):
@@ -284,6 +312,7 @@ def get_text(message):
                 message.chat.id, "Passport ma'lumotlaringizni rasm kurinishida junating!")
 
         bot.register_next_step_handler(message, get_frontend)
+    
 
 
 bot.polling()
