@@ -3,10 +3,13 @@ from telebot import types
 from mysql import connector
 import json
 import datetime
+import os
+import base64
 bot = telebot.TeleBot("1778835566:AAGCqelAKbl7DBltGvpOT8pv-4_6lZezS9o", parse_mode="html")
 
 lang = 'uz'
 id_state = ''
+pcode = ''
 # main menu
 
 mydb = connector.connect(
@@ -15,6 +18,11 @@ mydb = connector.connect(
     password="root",
     database="linebet"
 )
+
+
+def secure_rand(len=8):
+    token=os.urandom(len)
+    return base64.b64encode(token)
 
 def filter(text):
     text = text.lower()
@@ -25,11 +33,16 @@ def filter(text):
 
 def user_add(chatid, mydb):
 
+    global pcode
     mycursor = mydb.cursor()
     mycursor.execute("SELECT * FROM users WHERE chat_id = "+str(chatid))
     myresult = mycursor.fetchall()
+    promo = (secure_rand()).decode('ascii')
+    pcode = promo
     if (len(myresult) == 0):
-        sql = "INSERT INTO users (chat_id) VALUES ("+str(chatid)+")"
+        
+        sql = "INSERT INTO users (chat_id,promokod) VALUES ("+str(chatid)+",'"+str(promo)+"')"
+        print(sql)
         mycursor.execute(sql)
         mydb.commit()
 
@@ -329,13 +342,17 @@ def get_my_cash(state,id):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
+    global pcode
+    user_add(message.from_user.id, mydb)
     markup = types.InlineKeyboardMarkup(row_width=2)
     ru = types.InlineKeyboardButton("🇷🇺Руский", callback_data='ru')
     uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
-    markup.add(ru, uz)
+    promo = types.InlineKeyboardButton("Промокод", url="https://t.me/LinrBet_Bot?start="+pcode)
+    markup.add(ru, uz, promo)
     bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
     bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
-    user_add(message.from_user.id, mydb)
+    
+    
 
 
 
@@ -387,6 +404,7 @@ def get_text(message):
             bot.send_message(message.chat.id,"Напишите ид из 1XBET, MELBET, LineBet а!")
         bot.register_next_step_handler(message,user_id_upd)
 
-
+#bot.remove_webhook()
 
 bot.polling()
+
