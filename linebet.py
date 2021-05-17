@@ -30,6 +30,12 @@ def filter(text):
     text = "".join(text) # alfabit harflaridan boshqa simvollarni uchiradi
     return text
 
+def filter_text(text):
+    text = text.lower()
+    text = [c for c in text if c in 'qwertyuiopasdfghjklzxcvbnm1234567890 -']
+    text = "".join(text) # alfabit harflaridan boshqa simvollarni uchiradi
+    return text
+
 
 def user_add(chatid, mydb):
 
@@ -38,11 +44,10 @@ def user_add(chatid, mydb):
     mycursor.execute("SELECT * FROM users WHERE chat_id = "+str(chatid))
     myresult = mycursor.fetchall()
     promo = (secure_rand()).decode('ascii')
-    pcode = promo
+    
     if (len(myresult) == 0):
-        
+        pcode = filter_text(promo)
         sql = "INSERT INTO users (chat_id,promokod) VALUES ("+str(chatid)+",'"+str(promo)+"')"
-        print(sql)
         mycursor.execute(sql)
         mydb.commit()
 
@@ -51,10 +56,10 @@ def get_menu(call, lang):
     markup = types.ReplyKeyboardMarkup()
     if(lang == 'ru'):
         replenish = types.KeyboardButton("🔄Пополнить")
-        withdraw = types.KeyboardButton("Вывести")
+        withdraw = types.KeyboardButton("📤Вывести")
         instruction = types.KeyboardButton("📚 Инструкция")
         orderkiwi = types.KeyboardButton("🔖Идитификация")
-        cashback = types.KeyboardButton("Cashback")
+        cashback = types.KeyboardButton("💸 Cashback")
         mycards = types.KeyboardButton("🔰Мои счета")
         kurs = types.KeyboardButton("📈Курс | 💰Резервы")
         myreplenish = types.KeyboardButton("Мои пополнения")
@@ -67,10 +72,10 @@ def get_menu(call, lang):
         bot.send_message(call.from_user.id,"Главное меню", reply_markup=markup)
     elif(lang == 'uz'):
         replenish = types.KeyboardButton("🔄Hisobni toldirish")
-        withdraw = types.KeyboardButton("chiqarish")
+        withdraw = types.KeyboardButton("📤Pul chiqarish")
         instruction = types.KeyboardButton("📚Qo'llanma")
         orderkiwi = types.KeyboardButton("🔖Identifikatsiya")
-        cashback = types.KeyboardButton("Cashback")
+        cashback = types.KeyboardButton("💸 Cashback")
         mycards = types.KeyboardButton("🔰Hamyonlar")
         kurs = types.KeyboardButton("📈Kurs | 💰Zahira")
         myreplenish = types.KeyboardButton("Tulovlar tarixi")
@@ -293,6 +298,18 @@ def payment(message):
     mydb.commit()
     bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi!\n summa : {message.text} \n  tip: {id_state}")
 
+
+def get_user(pcode):
+    global mydb    
+    mycursor = mydb.cursor()
+    sql = f"SELECT  * FROM  users WHERE promokod = '{pcode}'"
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    for item in myresult:
+        return item[1]
+    
+
+    
 def user_id_upd(message):
     global mydb
     global lang
@@ -321,6 +338,23 @@ def user_id_upd(message):
         elif (id_state == "LineBet UZS") and (item[3] > 0):
             bot.send_message(message.chat.id,f"LineBet ni tuldirish uchun summani kiriting!")
             bot.register_next_step_handler(message,payment)
+
+
+def push_promo(message):
+    global mydb
+    promo = message.text
+    user_id = get_user(promo)
+    mycursor = mydb.cursor()
+    sql = f"UPDATE users SET  link = 'https://t.me/LinrBet_Bot?start={message.text}' WHERE chat_id = '{user_id}'"    
+    mycursor.execute(sql)
+    mydb.commit()
+    mycursor = mydb.cursor()
+    dates = datetime.datetime.now()
+    sql = "INSERT INTO users_promo (user_id, client_id,dates) VALUES (%s, %s, %s)"
+    val = (str(user_id), str(message.from_user.id),dates.strftime("%Y-%m-%d %H:%M:%S"))
+    mycursor.execute(sql, val)
+    mydb.commit()
+
 def get_my_cash(state,id):
     global mydb
     global lang
@@ -337,7 +371,19 @@ def get_my_cash(state,id):
             bot.send_message(id,f"Sizning LineBet id {item[3]} nomeringiz")
         if (state == "user_melbetuzb"):
             bot.send_message(id,f"Sizning MelBet id {item[7]} nomeringiz")
-        
+
+def get_cashback(message,lang,mydb):
+    mycursor = mydb.cursor()
+    mycursor.execute(f"SELECT * FROM users where chat_id = {message.chat.id}")
+    myresult = mycursor.fetchall()
+    for x in myresult:
+        if(len(x[6]) < 8):
+            bot.send_message(message.chat.id,"qaysi sillka orqali kirdingiz ! Promo code ni kiriting")
+            bot.register_next_step_handler(message,push_promo)
+        else:
+            bot.send_message(message.chat.id,f"Sizni promo codingiz! - {x[6]}")
+    
+    
     
 
 @bot.message_handler(commands=['start', 'help'])
@@ -347,8 +393,8 @@ def send_welcome(message):
     markup = types.InlineKeyboardMarkup(row_width=2)
     ru = types.InlineKeyboardButton("🇷🇺Руский", callback_data='ru')
     uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
-    promo = types.InlineKeyboardButton("Промокод", url="https://t.me/LinrBet_Bot?start="+pcode)
-    markup.add(ru, uz, promo)
+    #promo = types.InlineKeyboardButton("Промокод", url="https://t.me/LinrBet_Bot?start="+pcode)
+    markup.add(ru, uz)
     bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
     bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
     
@@ -391,6 +437,8 @@ def get_text(message):
                 message.chat.id, "Passport ma'lumotlaringizni rasm kurinishida junating!")
 
         bot.register_next_step_handler(message, get_frontend)
+    if (message.text == "💸 Cashback"):
+        get_cashback(message,lang,mydb)
     if (message.text == "1XBET UZS") or (message.text == "MelBet UZS") or (message.text == "LineBet UZS"):
         if (message.text == "1XBET UZS"):
             id_state = "1XBET UZS"
