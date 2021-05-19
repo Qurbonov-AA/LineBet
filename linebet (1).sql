@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1:3306
--- Время создания: Май 07 2021 г., 10:00
+-- Время создания: Май 19 2021 г., 07:18
 -- Версия сервера: 5.5.62
 -- Версия PHP: 7.3.26
 
@@ -107,9 +107,9 @@ CREATE TABLE `users` (
   `chat_id` int(11) NOT NULL,
   `uzcard` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '0',
   `linebet_uz` int(11) NOT NULL,
-  `linebet_ru` int(11) NOT NULL,
+  `promokod` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
   `1xbet_uz` int(11) NOT NULL,
-  `1xbet_ru` int(11) NOT NULL,
+  `link` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
   `melbet_uz` int(11) NOT NULL,
   `melbet_ru` int(11) NOT NULL,
   `humo` int(11) NOT NULL
@@ -119,11 +119,32 @@ CREATE TABLE `users` (
 -- Дамп данных таблицы `users`
 --
 
-INSERT INTO `users` (`id`, `chat_id`, `uzcard`, `linebet_uz`, `linebet_ru`, `1xbet_uz`, `1xbet_ru`, `melbet_uz`, `melbet_ru`, `humo`) VALUES
-(1, 387713426, '8600310491574232', 12345678, 0, 87456987, 0, 987456140, 0, 0),
-(5, 1386463075, '0', 0, 0, 0, 0, 0, 0, 0),
-(6, 554547536, '0', 0, 0, 0, 0, 0, 0, 0),
-(7, 1062838548, '0', 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO `users` (`id`, `chat_id`, `uzcard`, `linebet_uz`, `promokod`, `1xbet_uz`, `link`, `melbet_uz`, `melbet_ru`, `humo`) VALUES
+(1, 387713426, '8600310491574232', 12345678, 'iFnwvLAAHc', 87456987, '0', 987456140, 0, 0),
+(5, 1386463075, '0', 0, '0', 0, '0', 0, 0, 0),
+(6, 554547536, '0', 0, '0', 0, '0', 0, 0, 0),
+(7, 1062838548, '0', 0, '0', 0, '0', 0, 0, 0),
+(9, 1713680678, '0', 0, 'KjzomZJm1o', 0, 'https://t.me/LinrBet_Bot?start=KjzomZJm1o', 0, 0, 0);
+
+-- --------------------------------------------------------
+
+--
+-- Структура таблицы `users_promo`
+--
+
+CREATE TABLE `users_promo` (
+  `id` int(11) NOT NULL,
+  `user_id` varchar(11) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `client_id` varchar(11) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dates` date NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Дамп данных таблицы `users_promo`
+--
+
+INSERT INTO `users_promo` (`id`, `user_id`, `client_id`, `dates`) VALUES
+(2, '1713680678', '387713426', '2021-05-17');
 
 --
 -- Индексы сохранённых таблиц
@@ -154,6 +175,12 @@ ALTER TABLE `users`
   ADD PRIMARY KEY (`id`);
 
 --
+-- Индексы таблицы `users_promo`
+--
+ALTER TABLE `users_promo`
+  ADD PRIMARY KEY (`id`);
+
+--
 -- AUTO_INCREMENT для сохранённых таблиц
 --
 
@@ -179,7 +206,13 @@ ALTER TABLE `pays`
 -- AUTO_INCREMENT для таблицы `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT для таблицы `users_promo`
+--
+ALTER TABLE `users_promo`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

@@ -338,6 +338,13 @@ def user_id_upd(message):
         elif (id_state == "LineBet UZS") and (item[3] > 0):
             bot.send_message(message.chat.id,f"LineBet ni tuldirish uchun summani kiriting!")
             bot.register_next_step_handler(message,payment)
+        elif (id_state == "MelBet UZS") and (item[5] > 0):
+            bot.send_message(message.chat.id,f"MelBet ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        elif (id_state == "1XBET UZS") and (item[7] > 0):
+            bot.send_message(message.chat.id,f"1XBET ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        
 
 
 def push_promo(message):
