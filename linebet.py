@@ -5,6 +5,8 @@ import json
 import datetime
 import os
 import base64
+
+from telebot.apihelper import send_message
 bot = telebot.TeleBot("1778835566:AAGCqelAKbl7DBltGvpOT8pv-4_6lZezS9o", parse_mode="html")
 
 lang = 'uz'
@@ -285,6 +287,40 @@ def add_melbet(message):
     mydb.commit()
     bot.send_message(message.chat.id,"MelBet registratsiyadan muvofaqiyatli utdi!")
 
+
+def send_notif(items):
+    global mydb
+    mycursor = mydb.cursor()
+    sql = f"SELECT p.*,u.linebet_uz,u.promokod,u.1xbet_uz,u.melbet_uz FROM pays p, users u  WHERE  u.chat_id = p.client_id and p.status = 'new' and p.client_id = {items[1]}"
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    for x in myresult:
+        bot.send_message(items[1],f"Karta raqami - {x[1]} , Summasi - {x[3]} , murojat yuborilgan sana - {x[4]} Tulov qilinadigan hamyon - {x[6]} ")
+
+    mycursor = mydb.cursor()
+    sql = f"SELECT * FROM users WHERE admin = 'admin' "
+    mycursor.execute(sql)
+    myadmin = mycursor.fetchone()
+    for x in myresult:
+        bot.send_message(myadmin[1],f"Karta raqami - {x[1]} , Summasi - {x[3]} , murojat yuborilgan sana - {x[4]} Tulov qilinadigan hamyon - {x[6]}, \n Linebet id - {x[7]}, 1Xbet id - {x[9]} , Melbet id - {x[10]}, promokod user - {x[8]}  ") 
+    
+def notif_list(user_id):
+    mycursor = mydb.cursor()
+    sql = f"SELECT * FROM pays  p  WHERE p.status = 'new' "
+    mycursor.execute(sql)
+    myresult = mycursor.fetchall()
+    markup = types.InlineKeyboardMarkup(row_width=1)
+    for item in myresult:
+        markup.add(types.InlineKeyboardButton(f"{item[1]} summa - {item[3]},  turi - {item[6]} ", callback_data=item[0]))
+    bot.send_message(user_id, "Tulov qilinishi kerak bulgan active tulovlar!", reply_markup=markup)
+
+def answer_notif(call):
+    mycursor = mydb.cursor()
+    sql = f"UPDATE pays p SET p.status = 'old'  WHERE  p.status = 'new' and p.client_id = {items[1]}"
+    mycursor.execute(sql)
+    mydb.commit()
+
+
 def payment(message):
     global mydb
     mycursor = mydb.cursor()
@@ -297,7 +333,7 @@ def payment(message):
     mycursor.execute(sql, val)
     mydb.commit()
     bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi!\n summa : {message.text} \n  tip: {id_state}")
-
+    send_notif(mycard)
 
 def get_user(pcode):
     global mydb    
@@ -393,22 +429,24 @@ def get_cashback(message,lang,mydb):
     
     
 
-@bot.message_handler(commands=['start', 'help'])
+@bot.message_handler(commands=['start', 'help','pays'])
 def send_welcome(message):
     global pcode
-    user_add(message.from_user.id, mydb)
-    markup = types.InlineKeyboardMarkup(row_width=2)
-    ru = types.InlineKeyboardButton("🇷🇺Руский", callback_data='ru')
-    uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
-    #promo = types.InlineKeyboardButton("Промокод", url="https://t.me/LinrBet_Bot?start="+pcode)
-    markup.add(ru, uz)
-    bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
-    bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
+    if (message.text == '/start'):
+        user_add(message.from_user.id, mydb)
+        markup = types.InlineKeyboardMarkup(row_width=2)
+        ru = types.InlineKeyboardButton("🇷🇺Руский", callback_data='ru')
+        uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
+        #promo = types.InlineKeyboardButton("Промокод", url="https://t.me/LinrBet_Bot?start="+pcode)
+        markup.add(ru, uz)
+        bot.send_message(message.chat.id, "<em>Выберите язык интерфейса💬</em>")
+        bot.send_message(message.chat.id, '<em>Interfeys tilini tanlang</em>', reply_markup=markup)
+    elif (message.text == '/pays'):
+        norif = [] 
+        notif_list(message.chat.id)
+        
     
     
-
-
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_inline(call):
@@ -421,7 +459,15 @@ def callback_inline(call):
         get_menu(call, lang)
     elif (call.data == "user_uzcard") or (call.data =="user_1xuzb") or (call.data == "user_lineuzb") or (call.data == "user_melbetuzb"):
         get_my_cash(call.data,call.from_user.id)
-        
+    else:
+        global mydb    
+        mycursor = mydb.cursor()
+        sql = f"UPDATE pays SET status = 'old' WHERE id = {call.data}"
+        mycursor.execute(sql)
+        mydb.commit()        
+        bot.send_message(call.from_user.id, 'tulov haqida malumot uzgartirildi ')
+        notif_list(call.from_user.id)
+
 
 
 @bot.message_handler(content_types=['text'])
