@@ -14,13 +14,15 @@ id_state = ''
 pcode = ''
 # main menu
 
-mydb = connector.connect(
+
+def connect_to_base():
+    mydb = connector.connect(
     host="localhost",
     user="root",
     password="root",
     database="linebet"
-)
-
+    )
+    return mydb
 
 def secure_rand(len=8):
     token=os.urandom(len)
@@ -39,8 +41,8 @@ def filter_text(text):
     return text
 
 
-def user_add(chatid, mydb):
-
+def user_add(chatid):
+    mydb = connect_to_base()
     global pcode
     mycursor = mydb.cursor()
     mycursor.execute("SELECT * FROM users WHERE chat_id = "+str(chatid))
@@ -52,7 +54,40 @@ def user_add(chatid, mydb):
         sql = "INSERT INTO users (chat_id,promokod) VALUES ("+str(chatid)+",'"+str(promo)+"')"
         mycursor.execute(sql)
         mydb.commit()
-
+def main_menu(message, lang):
+    markup = types.ReplyKeyboardMarkup()
+    if(lang == 'ru'):
+        replenish = types.KeyboardButton("🔄Пополнить")
+        withdraw = types.KeyboardButton("📤Вывести")
+        instruction = types.KeyboardButton("📚 Инструкция")
+        orderkiwi = types.KeyboardButton("🔖Идитификация")
+        cashback = types.KeyboardButton("💸 Cashback")
+        mycards = types.KeyboardButton("🔰Мои счета")
+        kurs = types.KeyboardButton("📈Курс | 💰Резервы")
+        myreplenish = types.KeyboardButton("Мои пополнения")
+        callback = types.KeyboardButton("Обратная связь")
+        markup.row(replenish)
+        markup.row(withdraw, instruction)
+        markup.row(orderkiwi, cashback)
+        markup.row(mycards, kurs)
+        markup.row(myreplenish, callback)
+        bot.send_message(message.chat.id,"Главное меню", reply_markup=markup)
+    elif(lang == 'uz'):
+        replenish = types.KeyboardButton("🔄Hisobni toldirish")
+        withdraw = types.KeyboardButton("📤Pul chiqarish")
+        instruction = types.KeyboardButton("📚Qo'llanma")
+        orderkiwi = types.KeyboardButton("🔖Identifikatsiya")
+        cashback = types.KeyboardButton("💸 Cashback")
+        mycards = types.KeyboardButton("🔰Hamyonlar")
+        kurs = types.KeyboardButton("📈Kurs | 💰Zahira")
+        myreplenish = types.KeyboardButton("Tulovlar tarixi")
+        callback = types.KeyboardButton("Aloqa")
+        markup.row(replenish)
+        markup.row(withdraw, instruction)
+        markup.row(orderkiwi, cashback)
+        markup.row(mycards, kurs)
+        markup.row(myreplenish, callback)
+        bot.send_message(message.chat.id,"Bosh menu", reply_markup=markup)
 
 def get_menu(call, lang):
     markup = types.ReplyKeyboardMarkup()
@@ -167,7 +202,8 @@ def get_userinfo(message, lang):
             message.chat.id, "🗂Sizning hisoblaringiz:", reply_markup=markup)
 
 
-def get_kursinfo(message, lang, mydb):
+def get_kursinfo(message, lang):
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     mycursor.execute("SELECT * FROM kurs ")
     myresult = mycursor.fetchall()
@@ -207,7 +243,7 @@ def get_kursinfo(message, lang, mydb):
 
 def get_frontend(message):
     global lang
-    global mydb
+    mydb = connect_to_base()
     if(message.content_type == 'photo'):
         user = message.from_user.id
         photo_data = message.json["photo"][-1]["file_id"]
@@ -230,7 +266,7 @@ def get_frontend(message):
 
 def get_backend(message):
     global lang
-    global mydb
+    mydb =connect_to_base()
     if(message.content_type == 'photo'):
         user = message.from_user.id
         photo_data = message.json["photo"][0]["file_id"]
@@ -253,7 +289,7 @@ def get_backend(message):
 
 def add_mycard(message):
     mycard = filter(message.text)
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"UPDATE users SET uzcard = '{mycard}' WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
@@ -262,7 +298,7 @@ def add_mycard(message):
         
 def add_linebet(message):
     linebet = filter(message.text)
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"UPDATE users SET linebet_uz = '{linebet}' WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
@@ -271,7 +307,7 @@ def add_linebet(message):
 
 def add_1xbet(message):
     xbet = filter(message.text)
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"UPDATE users SET 1xbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
@@ -280,7 +316,7 @@ def add_1xbet(message):
 
 def add_melbet(message):
     xbet = filter(message.text)
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"UPDATE users SET melbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
@@ -289,32 +325,34 @@ def add_melbet(message):
 
 
 def send_notif(items):
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"SELECT p.*,u.linebet_uz,u.promokod,u.1xbet_uz,u.melbet_uz FROM pays p, users u  WHERE  u.chat_id = p.client_id and p.status = 'new' and p.client_id = {items[1]}"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     for x in myresult:
-        bot.send_message(items[1],f"Karta raqami - {x[1]} , Summasi - {x[3]} , murojat yuborilgan sana - {x[4]} Tulov qilinadigan hamyon - {x[6]} ")
+        bot.send_message(items[1],f"Karta raqami - {x[1]} \n Summasi - {x[3]} \n murojat yuborilgan sana - {x[4]} \n  Tulov qilinadigan hamyon - {x[6]} ")
 
     mycursor = mydb.cursor()
     sql = f"SELECT * FROM users WHERE admin = 'admin' "
     mycursor.execute(sql)
     myadmin = mycursor.fetchone()
     for x in myresult:
-        bot.send_message(myadmin[1],f"Karta raqami - {x[1]} , Summasi - {x[3]} , murojat yuborilgan sana - {x[4]} Tulov qilinadigan hamyon - {x[6]}, \n Linebet id - {x[7]}, 1Xbet id - {x[9]} , Melbet id - {x[10]}, promokod user - {x[8]}  ") 
+        bot.send_message(myadmin[1],f"Karta raqami - {x[1]} \n Summasi - {x[3]} \n murojat yuborilgan sana - {x[4]} \n Tulov qilinadigan hamyon - {x[6]}, \n Linebet id - {x[7]} \n 1Xbet id - {x[9]} \n Melbet id - {x[10]} \n promokod user - {x[8]}  ") 
     
 def notif_list(user_id):
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"SELECT * FROM pays  p  WHERE p.status = 'new' "
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     markup = types.InlineKeyboardMarkup(row_width=1)
     for item in myresult:
-        markup.add(types.InlineKeyboardButton(f"{item[1]} summa - {item[3]},  turi - {item[6]} ", callback_data=item[0]))
+        markup.add(types.InlineKeyboardButton(f"{item[1]} summa - {item[3]} \n  turi - {item[6]} ", callback_data=item[0]))
     bot.send_message(user_id, "Tulov qilinishi kerak bulgan active tulovlar!", reply_markup=markup)
 
 def answer_notif(call):
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql = f"UPDATE pays p SET p.status = 'old'  WHERE  p.status = 'new' and p.client_id = {items[1]}"
     mycursor.execute(sql)
@@ -322,21 +360,25 @@ def answer_notif(call):
 
 
 def payment(message):
-    global mydb
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql =f"SELECT * FROM users WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
     mycard = mycursor.fetchone()
-    dates = datetime.datetime.now()        
-    sql = "INSERT INTO pays (client_card,client_id,name,dates,price) VALUES (%s, %s, %s, %s, %s)"
-    val = (str(mycard[2]), str(mycard[1]),id_state,dates.strftime("%Y-%m-%d %H:%M:%S"),message.text)
-    mycursor.execute(sql, val)
-    mydb.commit()
-    bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi!\n summa : {message.text} \n  tip: {id_state}")
-    send_notif(mycard)
+    dates = datetime.datetime.now()
+    if (int(message.text) < 5000):
+        bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz bekor qilindi ! \n summa : {message.text}  \n  minimal summa 5000 \n tip: {id_state}")
+    else:    
+        sql = "INSERT INTO pays (client_card,client_id,name,dates,price) VALUES (%s, %s, %s, %s, %s)"
+        val = (str(mycard[2]), str(mycard[1]),id_state,dates.strftime("%Y-%m-%d %H:%M:%S"),message.text)
+        mycursor.execute(sql, val)
+        mydb.commit()
+        bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi!\n summa : {message.text} \n  tip: {id_state}")
+        bot.send_message(message.chat.id,"Quyidagi karta raqamiga tashlab bering  UZCARD 8600140435703799")
+        send_notif(mycard)
 
 def get_user(pcode):
-    global mydb    
+    mydb = connect_to_base()    
     mycursor = mydb.cursor()
     sql = f"SELECT  * FROM  users WHERE promokod = '{pcode}'"
     mycursor.execute(sql)
@@ -347,7 +389,7 @@ def get_user(pcode):
 
     
 def user_id_upd(message):
-    global mydb
+    mydb = connect_to_base()
     global lang
     global id_state
     mycursor = mydb.cursor()
@@ -384,7 +426,7 @@ def user_id_upd(message):
 
 
 def push_promo(message):
-    global mydb
+    mydb = connect_to_base()
     promo = message.text
     user_id = get_user(promo)
     mycursor = mydb.cursor()
@@ -399,7 +441,7 @@ def push_promo(message):
     mydb.commit()
 
 def get_my_cash(state,id):
-    global mydb
+    mydb = connect_to_base()
     global lang
     mycursor = mydb.cursor()
     sql = f"SELECT  * FROM  users WHERE chat_id = {id}"
@@ -415,7 +457,8 @@ def get_my_cash(state,id):
         if (state == "user_melbetuzb"):
             bot.send_message(id,f"Sizning MelBet id {item[7]} nomeringiz")
 
-def get_cashback(message,lang,mydb):
+def get_cashback(message,lang):
+    mydb = connect_to_base()
     mycursor = mydb.cursor()
     mycursor.execute(f"SELECT * FROM users where chat_id = {message.chat.id}")
     myresult = mycursor.fetchall()
@@ -433,7 +476,7 @@ def get_cashback(message,lang,mydb):
 def send_welcome(message):
     global pcode
     if (message.text == '/start'):
-        user_add(message.from_user.id, mydb)
+        user_add(message.from_user.id)
         markup = types.InlineKeyboardMarkup(row_width=2)
         ru = types.InlineKeyboardButton("🇷🇺Руский", callback_data='ru')
         uz = types.InlineKeyboardButton("🇺🇿Ўзбек тили", callback_data='uz')
@@ -472,6 +515,7 @@ def callback_inline(call):
 
 @bot.message_handler(content_types=['text'])
 def get_text(message):
+    global lang
     global id_state 
     if (message.text == "🔄Пополнить") or (message.text == "🔄Hisobni toldirish"):
         get_replenish(message, lang)
@@ -480,7 +524,7 @@ def get_text(message):
     if (message.text == "🔰Hamyonlar") or (message.text == "🔰Мои счета"):
         get_userinfo(message, lang)
     if (message.text == "📈Kurs | 💰Zahira") or (message.text == "📈Курс | 💰Резервы"):
-        get_kursinfo(message, lang, mydb)
+        get_kursinfo(message, lang)
     if (message.text == '🔖Identifikatsiya') or (message.text == "🔖Идитификация"):
         if (lang == 'ru'):
             bot.send_message(
@@ -491,7 +535,7 @@ def get_text(message):
 
         bot.register_next_step_handler(message, get_frontend)
     if (message.text == "💸 Cashback"):
-        get_cashback(message,lang,mydb)
+        get_cashback(message,lang)
     if (message.text == "1XBET UZS") or (message.text == "MelBet UZS") or (message.text == "LineBet UZS"):
         if (message.text == "1XBET UZS"):
             id_state = "1XBET UZS"
@@ -504,6 +548,9 @@ def get_text(message):
         else:
             bot.send_message(message.chat.id,"Напишите ид из 1XBET, MELBET, LineBet а!")
         bot.register_next_step_handler(message,user_id_upd)
+    if (message.text == 'Asosiy menu') or (message.text == 'Главная меню'):
+        main_menu(message,lang)
+        
 
 #bot.remove_webhook()
 
