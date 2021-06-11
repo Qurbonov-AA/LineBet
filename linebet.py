@@ -155,13 +155,13 @@ def get_replenish(message, lang):
         markup.row(xbet_uz, xbet_ru, linebet_uz)
         markup.row(main)
         bot.send_message(
-        message.chat.id, "Выберите валюту пополнения.", reply_markup=markup)
+        message.chat.id, "Выберите тип пополнения.", reply_markup=markup)
     if (lang == 'uz'):
         main       = types.KeyboardButton("Asosiy menu")
         markup.row(xbet_uz, xbet_ru, linebet_uz)
         markup.row(main)
         bot.send_message(
-        message.chat.id, "To'ldirilayotgan valyuta turini tanlang.", reply_markup=markup)
+        message.chat.id, "To'ldirilayotgan hamyon turini tanlang.", reply_markup=markup)
 
 
 
@@ -527,7 +527,7 @@ def callback_inline(call):
     elif (call.data == 'uzcard_upd') or (call.data =='1xbet_upd') or (call.data == 'linebet_upd') or (call.data == 'melbet_upd'):
         upd_mydata(call.data,call.from_user.id)
     else:
-        global mydb    
+        mydb = connect_to_base()    
         mycursor = mydb.cursor()
         sql = f"UPDATE pays SET status = 'old' WHERE id = {call.data}"
         mycursor.execute(sql)
@@ -560,20 +560,23 @@ def get_text(message):
         bot.register_next_step_handler(message, get_frontend)
     if (message.text == "💸 Cashback"):
         get_cashback(message,lang)
-    if (message.text == "1XBET UZS") or (message.text == "MelBet UZS") or (message.text == "LineBet UZS"):
-        if (message.text == "1XBET UZS"):
-            id_state = "1XBET UZS"
-        elif(message.text == "MelBet UZS"):
-            id_state = "MelBet UZS"
-        elif(message.text == "LineBet UZS"):
-            id_state = "LineBet UZS"
-        if (lang == "uz"):
-            bot.send_message(message.chat.id,"1XBET, MELBET, LineBet dagi id nomeringizni kiriting! ")            
-        else:
-            bot.send_message(message.chat.id,"Напишите ид из 1XBET, MELBET, LineBet а!")
+    #if (message.text == "1XBET UZS") or (message.text == "MelBet UZS") or (message.text == "LineBet UZS"):
+    if (message.text == "1XBET UZS"):
+        id_state = "1XBET UZS"
+        bot.register_next_step_handler(message,user_id_upd)
+    if(message.text == "MelBet UZS"):
+        id_state = "MelBet UZS"
+        bot.register_next_step_handler(message,user_id_upd)
+    if(message.text == "LineBet UZS"):
+        id_state = "LineBet UZS"
         bot.register_next_step_handler(message,user_id_upd)
     if (message.text == 'Asosiy menu') or (message.text == 'Главная меню'):
         main_menu(message,lang)
+    #if (lang == "uz"):
+    #    bot.send_message(message.chat.id,"1XBET, MELBET, LineBet dagi id nomeringizni kiriting! ")            
+    #else:
+    #    bot.send_message(message.chat.id,"Напишите ид из 1XBET, MELBET, LineBet а!")
+    
         
 
 #bot.remove_webhook()
