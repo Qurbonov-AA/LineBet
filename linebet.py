@@ -24,6 +24,20 @@ def connect_to_base():
     )
     return mydb
 
+def upd_mydata(datas,my_id):
+    mydb = connect_to_base()
+    mycursor = mydb.cursor()
+    if (datas == 'uzcard_upd'):
+        sql = f"UPDATE users SET uzcard = '0' WHERE chat_id = '{my_id}'"
+    elif (datas == '1xbet_upd'):
+        sql = f"UPDATE users SET 1xbet_uz = 0 WHERE chat_id = '{my_id}'"
+    elif (datas == 'linebet_upd'):
+        sql = f"UPDATE users SET linebet_uz = 0 WHERE chat_id = '{my_id}'"
+    elif (datas == 'melbet_upd'):
+        sql = f"UPDATE users SET melbet_uz = 0 WHERE chat_id = '{my_id}'"
+    mycursor.execute(sql)
+    mydb.commit()
+
 def secure_rand(len=8):
     token=os.urandom(len)
     return base64.b64encode(token)
@@ -176,28 +190,36 @@ def get_instruction(message, lang):
 
 
 def get_userinfo(message, lang):
-    markup = types.InlineKeyboardMarkup(row_width=3)
+    markup = types.InlineKeyboardMarkup(row_width=2)
     if (lang == 'ru'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
+        card_upd  = types.InlineKeyboardButton("↪",callback_data = 'uzcard_upd')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
+        uzxbet_upd  = types.InlineKeyboardButton("↪",callback_data = '1xbet_upd')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
+        linebet_upd  = types.InlineKeyboardButton("↪",callback_data = 'linebet_upd')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        markup.add(user_card, user_uzxbet, user_uzline, user_uzmelbet)
+        melbet_upd  = types.InlineKeyboardButton("↪",callback_data = 'melbet_upd')
+        markup.add(user_card, card_upd, user_uzxbet, uzxbet_upd, user_uzline, linebet_upd, user_uzmelbet,melbet_upd)
         bot.send_message(message.chat.id, "🗂Ваши Кошельки:",   reply_markup=markup)
     if (lang == 'uz'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
+        card_upd  = types.InlineKeyboardButton("↪",callback_data = 'uzcard_upd')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
+        uzxbet_upd  = types.InlineKeyboardButton("↪",callback_data = '1xbet_upd')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
+        linebet_upd  = types.InlineKeyboardButton("↪",callback_data = 'linebet_upd')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        markup.add(user_card, user_uzxbet, user_uzline, user_uzmelbet)
+        melbet_upd  = types.InlineKeyboardButton("↪",callback_data = 'melbet_upd')
+        markup.add(user_card, card_upd, user_uzxbet, uzxbet_upd, user_uzline, linebet_upd, user_uzmelbet,melbet_upd)
         bot.send_message(
             message.chat.id, "🗂Sizning hisoblaringiz:", reply_markup=markup)
 
@@ -502,6 +524,8 @@ def callback_inline(call):
         get_menu(call, lang)
     elif (call.data == "user_uzcard") or (call.data =="user_1xuzb") or (call.data == "user_lineuzb") or (call.data == "user_melbetuzb"):
         get_my_cash(call.data,call.from_user.id)
+    elif (call.data == 'uzcard_upd') or (call.data =='1xbet_upd') or (call.data == 'linebet_upd') or (call.data == 'melbet_upd'):
+        upd_mydata(call.data,call.from_user.id)
     else:
         global mydb    
         mycursor = mydb.cursor()
