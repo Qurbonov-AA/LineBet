@@ -46,7 +46,10 @@ def filter(text):
     text = text.lower()
     text = [c for c in text if c in '0123456789 -']
     text = "".join(text) # alfabit harflaridan boshqa simvollarni uchiradi
-    return text
+    if (len(text) > 3):
+        return int(text)
+    else:
+        return 0
 
 def filter_text(text):
     text = text.lower()
@@ -322,28 +325,37 @@ def add_linebet(message):
     linebet = filter(message.text)
     mydb = connect_to_base()
     mycursor = mydb.cursor()
-    sql = f"UPDATE users SET linebet_uz = '{linebet}' WHERE chat_id = {message.from_user.id}"
-    mycursor.execute(sql)
-    mydb.commit()
-    bot.send_message(message.chat.id,"LineBet registratsiyadan muvofaqiyatli utdi!")
+    if (linebet == 0):
+        bot.send_message(message.chat.id,"LineBet id ingizda sonlar bo'lishi kerak!")
+    else:
+        sql = f"UPDATE users SET linebet_uz = '{linebet}' WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        mydb.commit()
+        bot.send_message(message.chat.id,"LineBet registratsiyadan muvofaqiyatli utdi!")
 
 def add_1xbet(message):
     xbet = filter(message.text)
     mydb = connect_to_base()
     mycursor = mydb.cursor()
-    sql = f"UPDATE users SET 1xbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
-    mycursor.execute(sql)
-    mydb.commit()
-    bot.send_message(message.chat.id,"1XBET registratsiyadan muvofaqiyatli utdi!")
+    if (xbet == 0):
+        bot.send_message(message.chat.id,"1XBET id ingizda sonlar ham bo'lishi kerak!")
+    else:
+        sql = f"UPDATE users SET 1xbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        mydb.commit()
+        bot.send_message(message.chat.id,"1XBET registratsiyadan muvofaqiyatli utdi!")
 
 def add_melbet(message):
     xbet = filter(message.text)
     mydb = connect_to_base()
     mycursor = mydb.cursor()
-    sql = f"UPDATE users SET melbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
-    mycursor.execute(sql)
-    mydb.commit()
-    bot.send_message(message.chat.id,"MelBet registratsiyadan muvofaqiyatli utdi!")
+    if (xbet == 0):
+        bot.send_message(message.chat.id,"MelBet id ingizda sonlar bo'lishi kerak!")
+    else:
+        sql = f"UPDATE users SET melbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        mydb.commit()
+        bot.send_message(message.chat.id,"MelBet registratsiyadan muvofaqiyatli utdi!")
 
 
 def send_notif(items):
@@ -388,7 +400,7 @@ def payment(message):
     mycursor.execute(sql)
     mycard = mycursor.fetchone()
     dates = datetime.datetime.now()
-    if (int(message.text) < 5000):
+    if (filter(message.text) <= 5000):
         bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz bekor qilindi ! \n summa : {message.text}  \n  minimal summa 5000 \n tip: {id_state}")
     else:    
         sql = "INSERT INTO pays (client_card,client_id,name,dates,price) VALUES (%s, %s, %s, %s, %s)"
@@ -438,12 +450,15 @@ def user_id_upd(message):
         elif (id_state == "LineBet UZS") and (item[3] > 0):
             bot.send_message(message.chat.id,f"LineBet ni tuldirish uchun summani kiriting!")
             bot.register_next_step_handler(message,payment)
-        elif (id_state == "MelBet UZS") and (item[5] > 0):
-            bot.send_message(message.chat.id,f"MelBet ni tuldirish uchun summani kiriting!")
-            bot.register_next_step_handler(message,payment)
-        elif (id_state == "1XBET UZS") and (item[7] > 0):
+        elif (id_state == "1XBET UZS") and (item[5] > 0):
             bot.send_message(message.chat.id,f"1XBET ni tuldirish uchun summani kiriting!")
             bot.register_next_step_handler(message,payment)
+        elif (id_state == "MelBet UZS") and (item[7] > 0):
+            bot.send_message(message.chat.id,f"MelBet ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        else:
+            print(item)
+            print(message.text)
         
 
 
