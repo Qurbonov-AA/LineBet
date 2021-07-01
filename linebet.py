@@ -13,7 +13,7 @@ lang = 'uz'
 id_state = ''
 pcode = ''
 # main menu
-
+gmessage = {}
 
 def connect_to_base():
     mydb = connector.connect(
@@ -29,12 +29,16 @@ def upd_mydata(datas,my_id):
     mycursor = mydb.cursor()
     if (datas == 'uzcard_upd'):
         sql = f"UPDATE users SET uzcard = '0' WHERE chat_id = '{my_id}'"
+        bot.send_message(my_id,"Sizning carta raqamingiz uchirildi!")
     elif (datas == '1xbet_upd'):
         sql = f"UPDATE users SET 1xbet_uz = 0 WHERE chat_id = '{my_id}'"
+        bot.send_message(my_id,"Sizning 1xbet id ingiz uchirildi!")
     elif (datas == 'linebet_upd'):
         sql = f"UPDATE users SET linebet_uz = 0 WHERE chat_id = '{my_id}'"
+        bot.send_message(my_id,"Sizning linebet id ingiz uchirildi!")
     elif (datas == 'melbet_upd'):
         sql = f"UPDATE users SET melbet_uz = 0 WHERE chat_id = '{my_id}'"
+        bot.send_message(my_id,"Sizning melbet id ingiz uchirildi!")
     mycursor.execute(sql)
     mydb.commit()
 
@@ -197,7 +201,9 @@ def get_instruction(message, lang):
 
 
 def get_userinfo(message, lang):
-    markup = types.InlineKeyboardMarkup(row_width=2)
+    global gmessage
+    markup = types.InlineKeyboardMarkup(row_width=2)    
+    gmessage = message
     if (lang == 'ru'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
@@ -318,12 +324,16 @@ def get_backend(message):
 
 def add_mycard(message):
     mycard = filter(message.text)
-    mydb = connect_to_base()
-    mycursor = mydb.cursor()
-    sql = f"UPDATE users SET uzcard = '{mycard}' WHERE chat_id = {message.from_user.id}"
-    mycursor.execute(sql)
-    mydb.commit()
-    bot.send_message(message.chat.id,"UZCARD registratsiyadan muvofaqiyatli utdi!")
+    if (mycard < 1000000000000000):
+        bot.send_message(message.chat.id, "Karta raqamini tekshirib tering 16 raqam bo'lishi kerak!" )
+        
+    else:
+        mydb = connect_to_base()
+        mycursor = mydb.cursor()
+        sql = f"UPDATE users SET uzcard = '{mycard}' WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        mydb.commit()
+        bot.send_message(message.chat.id,"UZCARD registratsiyadan muvofaqiyatli utdi!")
         
 def add_linebet(message):
     linebet = filter(message.text)
@@ -331,6 +341,7 @@ def add_linebet(message):
     mycursor = mydb.cursor()
     if (linebet == 0):
         bot.send_message(message.chat.id,"LineBet id ingizda sonlar bo'lishi kerak!")
+        bot.register_next_step_handler(message, add_linebet)
     else:
         sql = f"UPDATE users SET linebet_uz = '{linebet}' WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -343,6 +354,7 @@ def add_1xbet(message):
     mycursor = mydb.cursor()
     if (xbet == 0):
         bot.send_message(message.chat.id,"1XBET id ingizda sonlar ham bo'lishi kerak!")
+        bot.register_next_step_handler(message, add_1xbet)
     else:
         sql = f"UPDATE users SET 1xbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -355,6 +367,7 @@ def add_melbet(message):
     mycursor = mydb.cursor()
     if (xbet == 0):
         bot.send_message(message.chat.id,"MelBet id ingizda sonlar bo'lishi kerak!")
+        bot.register_next_step_handler(message, add_melbet)
     else:
         sql = f"UPDATE users SET melbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -411,6 +424,7 @@ def answer_notif(call):
 
 
 def payment(message):
+    global id_state
     mydb = connect_to_base()
     mycursor = mydb.cursor()
     sql =f"SELECT * FROM users WHERE chat_id = {message.from_user.id}"
@@ -422,7 +436,19 @@ def payment(message):
         main_menu(message,lang)
     elif (filter(message.text) <= 5000):
         bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz bekor qilindi ! \n summa : {message.text}  \n  minimal summa 5000 \n tip: {id_state} ")
-        
+        if (message.text == "1XBET UZS"):
+            bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+            id_state = "1XBET UZS"
+            bot.register_next_step_handler(message,payment)
+        elif (message.text == "LineBet UZS"):
+            bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+            id_state = "LineBet UZS"
+            bot.register_next_step_handler(message,payment)
+        elif (message.text == "MelBet UZS" ):
+            bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+            id_state = "MelBet UZS"
+            bot.register_next_step_handler(message,payment)
+            
         
     else:    
         sql = "INSERT INTO pays (client_card,client_id,name,dates,price) VALUES (%s, %s, %s, %s, %s)"
@@ -432,7 +458,7 @@ def payment(message):
         bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi!\n summa : {message.text} \n  tip: {id_state}")
         bot.send_message(message.chat.id, f"\n uzcard : {mycard[2]} \n  1xbet - {mycard[5]} \n linebet - {mycard[3]} \n melbet - {mycard[7]}")
         bot.send_message(message.chat.id,"Quyidagi karta raqamiga tashlab bering  UZCARD 8600140435703799")
-        
+        bot.send_message(message.chat.id, f"⚠️  ogohlantiramiz! Boshqa plastik kartadan to'lob qilmang. Operator sizdan to'lov chekini surashi mumkin!")
 
 def get_user(pcode):
     mydb = connect_to_base()    
@@ -453,36 +479,28 @@ def user_id_upd(message):
     sql = f"SELECT  * FROM  users WHERE chat_id = {message.from_user.id}"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
-    for item in myresult:
+    for item in myresult:        
         
-        
+
         if (len(item[2]) == 1):
             bot.send_message(message.chat.id,f"Sizning UZCARD karta raqamingizni kiritmagansiz iltimos kiriting!")
             bot.register_next_step_handler(message,add_mycard)
-        elif (item[3] == 0) and (id_state == "LineBet UZS"):
+        elif (item[3] == 0) and (message.text == "LineBet UZS"):
             bot.send_message(message.chat.id,f"Sizning LineBet id ingiz ro'yxatga olinmagan!")
             id_state = ''
             bot.register_next_step_handler(message,add_linebet)
-        elif (id_state == "1XBET UZS") and (item[5] == 0):
+        elif (message.text == "1XBET UZS") and (item[5] == 0):
             bot.send_message(message.chat.id,f"Sizning 1XBET id ingiz ro'yxatga olinmagan!")
             id_state = ''
             bot.register_next_step_handler(message,add_1xbet)
-        elif (id_state == "MelBet UZS") and (item[7] == 0):
+        elif (message.text == "MelBet UZS") and (item[7] == 0):
             bot.send_message(message.chat.id,f"Sizning MelBet id ingiz ro'yxatga olinmagan!")
             id_state = ''
             bot.register_next_step_handler(message,add_melbet)
-        elif (id_state == "LineBet UZS") and (item[3] > 0):
-            bot.send_message(message.chat.id,f"LineBet ni tuldirish uchun summani kiriting!")
-            bot.register_next_step_handler(message,payment)
-        elif (id_state == "1XBET UZS") and (item[5] > 0):
-            bot.send_message(message.chat.id,f"1XBET ni tuldirish uchun summani kiriting!")
-            bot.register_next_step_handler(message,payment)
-        elif (id_state == "MelBet UZS") and (item[7] > 0):
-            bot.send_message(message.chat.id,f"MelBet ni tuldirish uchun summani kiriting!")
-            bot.register_next_step_handler(message,payment)
-        else:
-            if (message.text == 'Asosiy menu') or (message.text == 'Главная меню'):
-                main_menu(message,lang)
+        
+     
+            
+                
         
 
 
@@ -504,19 +522,37 @@ def push_promo(message):
 def get_my_cash(state,id):
     mydb = connect_to_base()
     global lang
+    global gmessage
     mycursor = mydb.cursor()
     sql = f"SELECT  * FROM  users WHERE chat_id = {id}"
     mycursor.execute(sql)
     myresult = mycursor.fetchall()
     for item in myresult:
         if (state == "user_uzcard"):
-            bot.send_message(id,f"Sizning uz card {item[2]} nomeringigz!")
+            if(len(item[2]) > 1):
+                bot.send_message(id,f"Sizning uz card {item[2]} nomeringigz!")
+            else:
+                bot.send_message(id,f"Sizni karta raqamingiz ruyxatdan o'tmagan!")
+                bot.register_next_step_handler(gmessage,add_mycard)
+                
         if (state == "user_1xuzb"):
-            bot.send_message(id,f"Sizning 1XBET id {item[5]} nomeringiz")
+            if (item[5] > 1000):
+                bot.send_message(id,f"Sizning 1XBET id {item[5]} nomeringiz")
+            else:
+                bot.send_message(id,f"Sizni 1XBET id  raqamingiz ruyxatdan o'tmagan!")
+                bot.register_next_step_handler(gmessage,add_1xbet)
         if (state == "user_lineuzb"):
-            bot.send_message(id,f"Sizning LineBet id {item[3]} nomeringiz")
+            if (item[3] > 1000):
+                bot.send_message(id,f"Sizning LineBet id {item[3]} nomeringiz")
+            else:
+                bot.send_message(id,f"Sizni LineBet id  raqamingiz ruyxatdan o'tmagan!")
+                bot.register_next_step_handler(gmessage,add_linebet)
         if (state == "user_melbetuzb"):
-            bot.send_message(id,f"Sizning MelBet id {item[7]} nomeringiz")
+            if (item[7] > 1000):
+                bot.send_message(id,f"Sizning MelBet id {item[7]} nomeringiz")
+            else:
+                bot.send_message(id,f"Sizni MelBet id  raqamingiz ruyxatdan o'tmagan!")
+                bot.register_next_step_handler(gmessage,add_melbet)
 
 def get_my_push(state,id):
     mydb = connect_to_base()
@@ -639,8 +675,9 @@ def callback_inline(call):
 @bot.message_handler(content_types=['text'])
 def get_text(message):
     global lang
-    global id_state 
-    print('get_text-'+message.text)
+    global id_state
+    
+
     if (message.text == "🔄Пополнить") or (message.text == "🔄Hisobni toldirish"):
         get_replenish(message, lang)
     elif (message.text == "📚Qo'llanma") or (message.text == "📚 Инструкция"):
@@ -664,16 +701,55 @@ def get_text(message):
         push_many(message)
     elif (message.text == "1XBET UZS"):
         id_state = "1XBET UZS"
-        bot.send_message(message.chat.id,"Siz 1XBET hamyoniga pul tuldirish bulimiga utyapsiz! Iltimos yana bir marta bosing!")
-        bot.register_next_step_handler(message,user_id_upd)
+        mydb = connect_to_base()
+        mycursor = mydb.cursor()
+        sql = f"SELECT  * FROM  users WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        for item in myresult:
+            if (len(item[2]) < 16):
+                bot.send_message(message.chat.id,f"Sizning UZCARD karta raqamingizni kiritmagansiz iltimos kiriting!")
+                bot.register_next_step_handler(message,add_mycard)
+            elif (item[5] <= 1):
+                bot.send_message(message.chat.id,f"Sizning 1XBET id ingiz ro'yxatga olinmagan!")            
+                bot.register_next_step_handler(message,add_1xbet)
+            else:
+                bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+                bot.register_next_step_handler(message,payment)
     elif(message.text == "MelBet UZS"):
         id_state = "MelBet UZS"
-        bot.send_message(message.chat.id,"Siz MelBet hamyoniga pul tuldirish bulimiga utyapsiz! Iltimos yana bir marta bosing!")
-        bot.register_next_step_handler(message,user_id_upd)
+        mydb = connect_to_base()
+        mycursor = mydb.cursor()
+        sql = f"SELECT  * FROM  users WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        for item in myresult:
+            if (len(item[2]) < 16):
+                bot.send_message(message.chat.id,f"Sizning UZCARD karta raqamingizni kiritmagansiz iltimos kiriting!")
+                bot.register_next_step_handler(message,add_mycard)
+            elif (item[7] <= 1):
+                bot.send_message(message.chat.id,f"Sizning MelBet id ingiz ro'yxatga olinmagan!")            
+                bot.register_next_step_handler(message,add_melbet)
+            else:
+                bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+                bot.register_next_step_handler(message,payment)   
     elif(message.text == "LineBet UZS"):
         id_state = "LineBet UZS"
-        bot.send_message(message.chat.id,"Siz LineBet hamyoniga pul tuldirish bulimiga utyapsiz!Iltimos yana bir marta bosing! ")
-        bot.register_next_step_handler(message,user_id_upd)
+        mydb = connect_to_base()
+        mycursor = mydb.cursor()
+        sql = f"SELECT  * FROM  users WHERE chat_id = {message.from_user.id}"
+        mycursor.execute(sql)
+        myresult = mycursor.fetchall()
+        for item in myresult:
+            if (len(item[2]) < 16):
+                bot.send_message(message.chat.id,f"Sizning UZCARD karta raqamingizni kiritmagansiz iltimos kiriting!")
+                bot.register_next_step_handler(message,add_mycard)
+            elif(item[3] <= 1):
+                bot.send_message(message.chat.id,f"Sizning LineBet id ingiz ro'yxatga olinmagan!")
+                bot.register_next_step_handler(message,add_linebet)
+            else:
+                bot.send_message(message.chat.id, "To'lov summasini kiriting!")
+                bot.register_next_step_handler(message,payment)
     elif (message.text == 'Asosiy menu') or (message.text == 'Главная меню'):
         main_menu(message,lang)
     else:
