@@ -341,7 +341,10 @@ def add_linebet(message):
     mycursor = mydb.cursor()
     if (linebet == 0):
         bot.send_message(message.chat.id,"LineBet id ingizda sonlar bo'lishi kerak!")
+<<<<<<< HEAD
         bot.register_next_step_handler(message, add_linebet)
+=======
+>>>>>>> d76d8c1ec8134a06dbc448fc51199c089fb71819
     else:
         sql = f"UPDATE users SET linebet_uz = '{linebet}' WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -354,7 +357,10 @@ def add_1xbet(message):
     mycursor = mydb.cursor()
     if (xbet == 0):
         bot.send_message(message.chat.id,"1XBET id ingizda sonlar ham bo'lishi kerak!")
+<<<<<<< HEAD
         bot.register_next_step_handler(message, add_1xbet)
+=======
+>>>>>>> d76d8c1ec8134a06dbc448fc51199c089fb71819
     else:
         sql = f"UPDATE users SET 1xbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -367,7 +373,10 @@ def add_melbet(message):
     mycursor = mydb.cursor()
     if (xbet == 0):
         bot.send_message(message.chat.id,"MelBet id ingizda sonlar bo'lishi kerak!")
+<<<<<<< HEAD
         bot.register_next_step_handler(message, add_melbet)
+=======
+>>>>>>> d76d8c1ec8134a06dbc448fc51199c089fb71819
     else:
         sql = f"UPDATE users SET melbet_uz = {xbet} WHERE chat_id = {message.from_user.id}"
         mycursor.execute(sql)
@@ -431,6 +440,7 @@ def payment(message):
     mycursor.execute(sql)
     mycard = mycursor.fetchone()
     dates = datetime.datetime.now()
+<<<<<<< HEAD
     if (message.text == 'Asosiy menu') or (message.text == 'Главная меню'):
         main_menu(message,lang)
         main_menu(message,lang)
@@ -450,6 +460,10 @@ def payment(message):
             bot.register_next_step_handler(message,payment)
             
         
+=======
+    if (filter(message.text) <= 5000):
+        bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz bekor qilindi ! \n summa : {message.text}  \n  minimal summa 5000 \n tip: {id_state}")
+>>>>>>> d76d8c1ec8134a06dbc448fc51199c089fb71819
     else:    
         sql = "INSERT INTO pays (client_card,client_id,name,dates,price) VALUES (%s, %s, %s, %s, %s)"
         val = (str(mycard[2]), str(mycard[1]),id_state,dates.strftime("%Y-%m-%d %H:%M:%S"),message.text)
@@ -497,10 +511,25 @@ def user_id_upd(message):
             bot.send_message(message.chat.id,f"Sizning MelBet id ingiz ro'yxatga olinmagan!")
             id_state = ''
             bot.register_next_step_handler(message,add_melbet)
+<<<<<<< HEAD
         
      
             
                 
+=======
+        elif (id_state == "LineBet UZS") and (item[3] > 0):
+            bot.send_message(message.chat.id,f"LineBet ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        elif (id_state == "1XBET UZS") and (item[5] > 0):
+            bot.send_message(message.chat.id,f"1XBET ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        elif (id_state == "MelBet UZS") and (item[7] > 0):
+            bot.send_message(message.chat.id,f"MelBet ni tuldirish uchun summani kiriting!")
+            bot.register_next_step_handler(message,payment)
+        else:
+            print(item)
+            print(message.text)
+>>>>>>> d76d8c1ec8134a06dbc448fc51199c089fb71819
         
 
 
