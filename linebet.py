@@ -215,31 +215,31 @@ def get_userinfo(message, lang):
     if (lang == 'ru'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
-        card_upd  = types.InlineKeyboardButton("↪",callback_data = 'uzcard_upd')
+        card_upd  = types.InlineKeyboardButton("❌",callback_data = 'uzcard_upd')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
-        uzxbet_upd  = types.InlineKeyboardButton("↪",callback_data = '1xbet_upd')
+        uzxbet_upd  = types.InlineKeyboardButton("❌",callback_data = '1xbet_upd')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
-        linebet_upd  = types.InlineKeyboardButton("↪",callback_data = 'linebet_upd')
+        linebet_upd  = types.InlineKeyboardButton("❌",callback_data = 'linebet_upd')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        melbet_upd  = types.InlineKeyboardButton("↪",callback_data = 'melbet_upd')
+        melbet_upd  = types.InlineKeyboardButton("❌",callback_data = 'melbet_upd')
         markup.add(user_card, card_upd, user_uzxbet, uzxbet_upd, user_uzline, linebet_upd, user_uzmelbet,melbet_upd)
         bot.send_message(message.chat.id, "🗂Ваши Кошельки:",   reply_markup=markup)
     if (lang == 'uz'):
         user_card = types.InlineKeyboardButton(
             "➕UZCARD", callback_data='user_uzcard')
-        card_upd  = types.InlineKeyboardButton("↪",callback_data = 'uzcard_upd')
+        card_upd  = types.InlineKeyboardButton("❌",callback_data = 'uzcard_upd')
         user_uzxbet = types.InlineKeyboardButton(
             "➕1XBET UZS", callback_data='user_1xuzb')
-        uzxbet_upd  = types.InlineKeyboardButton("↪",callback_data = '1xbet_upd')
+        uzxbet_upd  = types.InlineKeyboardButton("❌",callback_data = '1xbet_upd')
         user_uzline = types.InlineKeyboardButton(
             "➕LINEBET UZS", callback_data='user_lineuzb')
-        linebet_upd  = types.InlineKeyboardButton("↪",callback_data = 'linebet_upd')
+        linebet_upd  = types.InlineKeyboardButton("❌",callback_data = 'linebet_upd')
         user_uzmelbet = types.InlineKeyboardButton(
             "➕MELBET UZS", callback_data='user_melbetuzb')
-        melbet_upd  = types.InlineKeyboardButton("↪",callback_data = 'melbet_upd')
+        melbet_upd  = types.InlineKeyboardButton("❌",callback_data = 'melbet_upd')
         markup.add(user_card, card_upd, user_uzxbet, uzxbet_upd, user_uzline, linebet_upd, user_uzmelbet,melbet_upd)
         bot.send_message(
             message.chat.id, "🗂Sizning hisoblaringiz:", reply_markup=markup)
