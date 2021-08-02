@@ -486,7 +486,7 @@ def payment(message):
                 bot.send_message(message.chat.id,f"Sizni hisobni tuldirish haqidagi murojatingiz qabul qilindi! \n summa : {filter(message.text)} tip: {id_state} \n uzcard : {mycard[2]} \n  LineBet - {mycard[3]}")    
             markup.add(types.InlineKeyboardButton("tashladim✅", callback_data='s'+str(item[0])))
             markup.add(types.InlineKeyboardButton("bekor qilish❌", callback_data='d'+str(item[0])))
-            bot.send_message(message.chat.id,"Quyidagi karta raqamiga tashlab bering  UZCARD 8600140435703799 \n ⚠️  ogohlantiramiz! Boshqa plastik kartadan to'lov qilmang. Operator sizdan to'lov chekini surashi mumkin!",reply_markup=markup)
+            bot.send_message(message.chat.id,f"Pastroqda ko'rsatilgan to'lov summasini PAYME, Click, Apelsin, Zoomrad, Paynet to'lov tizimlaridan biri orqali \n \n  8600140435703799 - hisob raqamiga o'tkazing; \n \n To'lov summasi: {filter(message.text)} UZS To'lov o'tgach «tashladim✅» tugmasini bosing.\n  Sizning buyurtmangiz operator tomonidan ish vaqtida 1 daqiqadan 30 daqiqagacha vaqt ichida ko'rib chiqiladi.",reply_markup=markup)
         
 
 
@@ -698,14 +698,31 @@ def callback_inline(call):
             sql = f"UPDATE pays SET status = 'suc' WHERE id = {mid}"
             mycursor.execute(sql)
             mydb.commit()
-        else:
+            mygettype = mydb.cursor()
+            sql = f"select * from pays where id = {mid}"
+            mygettype.execute(sql)
+            myresult = mygettype.fetchone()
+            if(myresult[6] == "LineBet UZS"):
+                sql = f"SELECt p.*, (select linebet_uz from users where chat_id = {mid}) from pays as p WHERE p.status = 'suc' and p.id = {mid}"
+            elif(myresult[6] == "1XBET UZS"):
+                sql = f"SELECt p.*, (select 1xbet_uz from users where chat_id = {mid}) from pays as p WHERE p.status = 'suc' and p.id = {mid}"
+            elif (myresult[6] == "MelBet UZS"):
+                sql = f"SELECt p.*, (select melbet_uz from users where chat_id = {mid}) from pays as p WHERE p.status = 'suc' and p.id = {mid}"
+            mycursor = mydb.cursor()   
+            mycursor.execute(sql)
+            myresult = mycursor.fetchone()
+            mystr = f"✳️Sizning buyurtmangiz tekshirish uchun yuborildi:  \n   🆔{myresult[0]} \n  🔀{myresult[1]}  \n ➡️{myresult[6]} \n 📤berish: {myresult[3]} UZS   \n 📥olish: {myresult[3]} UZS \n  🇺🇿UZCARD:  8600140435703799 \n 🇺🇿{myresult[6]}: {myresult[7]} \n 📅Sana: {myresult[4]} \n Almashuv ish vaqtida 1 daqiqadan 30 daqiqagacha vaqt ichida ko'rib chiqiladi. ⚠️Operator to'lov chekini so'rashi mumkin"
+            bot.send_message(myresult[2],mystr)  
+            
+        elif(call.data[0] == 'd'):
             mid = int(call.data[1::])
             mydb = connect_to_base()    
             mycursor = mydb.cursor()
             sql = f"UPDATE pays SET status = 'del' WHERE id = {mid}"
             mycursor.execute(sql)
             mydb.commit()
-            
+            bot.send_message(call.from_user.id, "Sizning hisobni to'ldirish bo'yicha murojatingiz bekor qilindi")
+            get_menu(call,lang)
     else:
         
         mydb = connect_to_base()    
