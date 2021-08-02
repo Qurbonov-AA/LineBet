@@ -711,7 +711,7 @@ def callback_inline(call):
             mycursor = mydb.cursor()   
             mycursor.execute(sql)
             myresult = mycursor.fetchone()
-            mystr = f"✳️Sizning buyurtmangiz tekshirish uchun yuborildi:  \n   🆔{myresult[0]} \n  🔀{myresult[1]}  \n ➡️{myresult[6]} \n 📤berish: {myresult[3]} UZS   \n 📥olish: {myresult[3]} UZS \n  🇺🇿UZCARD:  8600140435703799 \n 🇺🇿{myresult[6]}: {myresult[7]} \n 📅Sana: {myresult[4]} \n Almashuv ish vaqtida 1 daqiqadan 30 daqiqagacha vaqt ichida ko'rib chiqiladi. ⚠️Operator to'lov chekini so'rashi mumkin"
+            mystr = f"✳️Sizning buyurtmangiz tekshirish uchun yuborildi:  \n 🆔{myresult[0]} \n 🔀{myresult[1]}  \n ➡️{myresult[6]} \n 📤berish: {myresult[3]} UZS   \n 📥olish: {myresult[3]} UZS \n  🇺🇿UZCARD:  8600140435703799 \n 🇺🇿{myresult[6]}: {myresult[7]} \n 📅Sana: {myresult[4]} \n Almashuv ish vaqtida 1 daqiqadan 30 daqiqagacha vaqt ichida ko'rib chiqiladi.\n ⚠️Operator to'lov chekini so'rashi mumkin"
             bot.send_message(myresult[2],mystr)  
             
         elif(call.data[0] == 'd'):
